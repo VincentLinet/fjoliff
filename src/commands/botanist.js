@@ -66,25 +66,35 @@ const input = async (interaction) => {
     const title = await Content.build(["shop"], "title", OWNER, { ...current, ...OWNER, place: current.name });
     const description = await content("section", OWNER, { section });
     const select = new Discord.StringSelectMenuBuilder()
-      .setCustomId("action")
-      .setPlaceholder("Action")
+      .setCustomId("articles")
+      .setPlaceholder("Acheter...")
       .addOptions(
-        new Discord.StringSelectMenuOptionBuilder()
-          .setLabel("Bulbasaur")
-          .setDescription("The dual-type Grass/Poison Seed Pokémon.")
-          .setValue("bulbasaur"),
-        new Discord.StringSelectMenuOptionBuilder()
-          .setLabel("Charmander")
-          .setDescription("The Fire-type Lizard Pokémon.")
-          .setValue("charmander"),
-        new Discord.StringSelectMenuOptionBuilder()
-          .setLabel("Squirtle")
-          .setDescription("The Water-type Tiny Turtle Pokémon.")
-          .setValue("squirtle")
+        ...fields.map(({ name, value }, index) => {
+          return new Discord.StringSelectMenuOptionBuilder().setLabel(name).setDescription(value).setValue(`${index}`);
+        })
       );
 
-    const row = new Discord.ActionRowBuilder().addComponents(select);
-    interaction.reply(Message.build({ fields, title, description }));
+    const components = [new Discord.ActionRowBuilder().addComponents(select)];
+    const response = await interaction.reply(Message.build({ title, description, components }));
+    const componentType = Discord.ComponentType.StringSelect;
+    const idle = 120_000;
+
+    const collector = response.createMessageComponentCollector({ componentType, idle });
+
+    collector.on("collect", async (interaction) => {
+      const { values } = interaction;
+      const [value] = values;
+      const { name: article } = fields[value];
+      const description = await content("next", OWNER, { article });
+      interaction.update(Message.build({ title, description, components }));
+    });
+
+    collector.on("end", async (collection) => {
+      const [collected] = collection;
+      if (!collected) return; // Montrer la liste des objets
+      const description = await content("leave", OWNER);
+      interaction.editReply(Message.build({ title, description, components: [] }));
+    });
   } else interaction.reply(await content("none"));
 };
 const execute = async (interaction) => {

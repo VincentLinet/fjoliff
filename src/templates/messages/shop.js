@@ -4,10 +4,10 @@ const COLOR = 0x0099ff;
 
 const content = (fields) => [Message.space, ...fields, Message.space];
 
-export const message = ({ fields, ...props }) => {
+export const message = ({ fields = [], ...props }) => {
   const template = {
     color: COLOR,
-    fields: content(fields) /*: fields.map((field) => ({ ...field, inline: true }))*/,
+    fields: fields.length > 0 ? content(fields) : [] /*: fields.map((field) => ({ ...field, inline: true }))*/,
     ...props
   };
   return Message.build(template);

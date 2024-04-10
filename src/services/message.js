@@ -10,9 +10,9 @@
  ** Fields:      Array [ { String name, String value, Boolean inline } ]
  */
 
-export const build = (props) => {
+export const build = ({ components, ...props }) => {
   const embed = { ...props, timestamp: new Date().toISOString() };
-  return { embeds: [embed] };
+  return { embeds: [embed], components };
 };
 
 export const space = { name: "\u200B", value: "\u200B" };
